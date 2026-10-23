@@ -95,6 +95,8 @@ def _lowercase_schema_types(schema: Any) -> Any:
         for k, v in schema.items():
             if k == "type" and isinstance(v, str):
                 new_dict[k] = v.lower()
+            elif k == "type" and isinstance(v, list):
+                new_dict[k] = [item.lower() if isinstance(item, str) else item for item in v]
             elif k == "default":
                 # Preserve user-provided default values.
                 new_dict[k] = v
