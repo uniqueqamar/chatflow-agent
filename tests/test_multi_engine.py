@@ -600,3 +600,31 @@ async def test_anthropic_non_retryable_error_does_not_retry() -> None:
     assert len(transport.requests_received) == 1
 
 
+
+
+def test_openai_schema_normalizer_handles_union_type_lists_and_anyof() -> None:
+    """Normalize nested union schemas without changing defaults or source objects."""
+    from chatflow_agent.core.engines.openai_compatible import _lowercase_schema_types
+
+    schema = {
+        "type": "OBJECT",
+        "properties": {
+            "optional": {"type": ["INTEGER", "NULL"], "default": None},
+            "union": {"anyOf": [{"type": "STRING"}, {"type": "NUMBER"}]},
+            "literal_default": {"type": "STRING", "default": "INTEGER"},
+        },
+    }
+
+    normalized = _lowercase_schema_types(schema)
+
+    assert normalized["type"] == "object"
+    assert normalized["properties"]["optional"] == {
+        "type": ["integer", "null"],
+        "default": None,
+    }
+    assert normalized["properties"]["union"]["anyOf"] == [
+        {"type": "string"},
+        {"type": "number"},
+    ]
+    assert normalized["properties"]["literal_default"]["default"] == "INTEGER"
+    assert schema["properties"]["optional"]["type"] == ["INTEGER", "NULL"]
